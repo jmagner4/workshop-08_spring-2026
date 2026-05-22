@@ -17,7 +17,7 @@ In this workshop, we will answer the question: How do specific leaf area, water 
 
 **Water treatment** is a categorical variable (i.e. a *factor*) with 2 levels: drought stressed (DS) and well watered (WW).  
 
-**Species** is a categorical variable (again, a *factor*) with 6 levels.  
+**Species** is a categorical variable (again, a *factor*) with 7 levels.  
 
 | Species name                 | Species code | Common name        |
 |------------------------------|--------------|--------------------|
@@ -44,8 +44,10 @@ library(ggeffects) # getting model predictions
 library(MuMIn) # model selection
 
 # read in your data here
-
-
+drought_exp <- read_xlsx(
+  here("data", "Valliere_etal_EcoApps_Data.xlsx"),
+       sheet = "First Harvest")
+  )
 
 ```
 
@@ -77,12 +79,12 @@ Data source: Valliere, Justin; Zhang, Jacqueline; Sharifi, M.; Rundel, Philip (2
 ```{r}
 #| label: data cleaning
 
-# 
-drought_exp_clean <- drought_exp 
-  # 
-  clean_names() 
-  # 
-  mutate(species_name = case_match(
+# creating new objecct 
+drought_exp_clean <- drought_exp |>
+  # cleaning names to all lowercase and underscores
+  clean_names() |>
+  # renaming species columns
+  mutate(species_name = recode_values(
     species,
     "ENCCAL" ~ "Encelia californica", # bush sunflower
     "ESCCAL" ~ "Eschscholzia californica", # California poppy
@@ -91,14 +93,14 @@ drought_exp_clean <- drought_exp
     "SALLEU" ~ "Salvia leucophylla", # purple sage
     "STIPUL" ~ "Stipa pulchra", # purple needlegrass
     "LOTSCO" ~ "Lotus scoparius" # deerweed
-  )) 
-  # 
+  )) |>
+  # renaming treatment columns... why is this case match fine??
   mutate(water_treatment = case_match(
     water,
     "WW" ~ "Well watered",
     "DS" ~ "Drought stressed"
-  ))  
-  # 
+  ))  |>
+  # reordering species/set levels and choose reference and water treatment
   mutate(species_name = as_factor(species_name),
          species_name = fct_relevel(species_name,
                                     "Lotus scoparius",
@@ -107,25 +109,35 @@ drought_exp_clean <- drought_exp
                                     "Encelia californica",
                                     "Stipa pulchra",
                                     "Eschscholzia californica",
-                                    "Grindelia camporum")) 
+                                    "Grindelia camporum")) |>
   mutate(water_treatment = as_factor(water_treatment),
          water_treatment = fct_relevel(water_treatment,
                                        "Drought stressed",
-                                       "Well watered")) 
-  #
+                                       "Well watered")) |>
+  # keeping relevant columns
   select(species_name, water_treatment, sla, total_g)
 ```
 
 Insert code to double check the structure of the data frame here.  
 
+looking at data structure using str()
+```{r}
+#| label: Checking structure
 
+str(drought_exp_clean)
+```
 
 
 Insert code to display 10 random rows from the data frame here.  
 
+displaying data using slice_sample()
 
-
-
+```{r}
+#| label: display 10 rows
+slice_sample(
+  drought_exp_clean, #data frame to display
+  n=10) # set 10 rows
+```
 
 # 3. Visualizing data
 
